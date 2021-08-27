@@ -8,13 +8,15 @@ import (
 	"log"
 	"net"
 	"shawon1fb/grpc_basic/greet/greetpb/greetpb"
+	"strconv"
+	"time"
 )
 
 type server struct {
 }
 
 func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
-
+	fmt.Printf("Greet function was invked with %v\n", req)
 	firstName := req.GetGreeting().GetFirstName()
 	lastName := req.GetGreeting().GetLastName()
 
@@ -23,6 +25,23 @@ func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.G
 	}
 	return res, nil
 
+}
+
+func (*server) GreetManyTime(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimeServer) error {
+	fmt.Printf("GreetManyTime function was invked with %v\n", req)
+	firstName := req.GetGreeting().GetFirstName()
+	lastName := req.GetGreeting().GetLastName()
+
+	for i := 0; i < 10; i++ {
+		result := "hello " + firstName + " " + lastName + " number:=> " + strconv.Itoa(i)
+		res := &greetpb.GreetManyTimesResponse{
+			Result: result,
+		}
+		stream.Send(res)
+		time.Sleep(1000 * time.Millisecond)
+	}
+
+	return nil
 }
 
 func main() {
