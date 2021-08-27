@@ -3,17 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"io"
 	"log"
 	"net"
 	"shawon1fb/grpc_basic/greet/greetpb/greetpb"
 	"strconv"
 	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
-type server struct {
-}
+type server struct{}
 
 func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
 	fmt.Printf("Greet function was invked with %v\n", req)
@@ -24,7 +25,6 @@ func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.G
 		Result: "Hello " + firstName + " " + lastName,
 	}
 	return res, nil
-
 }
 
 func (*server) GreetManyTime(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimeServer) error {
@@ -42,6 +42,29 @@ func (*server) GreetManyTime(req *greetpb.GreetManyTimesRequest, stream greetpb.
 	}
 
 	return nil
+}
+
+func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
+	fmt.Printf("GreetManyTime function was invked with stream\n")
+
+	result := ""
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			//finish loop
+			return stream.SendAndClose(&greetpb.LongGreetResponse{
+				Result: result,
+			})
+		}
+		if err != nil {
+			log.Fatal("Error while clint streaming", err)
+		}
+		firstName := req.GetGreeting().GetFirstName()
+		result += "Hello " + firstName + "! "
+
+	}
+	//return nil
 }
 
 func main() {
@@ -73,3 +96,5 @@ func main() {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
+
+//tow number NewServerTLSFromFile

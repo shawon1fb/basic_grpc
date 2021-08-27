@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"shawon1fb/grpc_basic/greet/greetpb/greetpb"
+	"strconv"
+	"time"
 )
 
 func main() {
@@ -19,7 +21,8 @@ func main() {
 	c := greetpb.NewGreetServiceClient(cc)
 
 	//doUnary(c)
-	doServerStreaming(c)
+	//doServerStreaming(c)
+	doClintStreaming(c)
 
 }
 func doUnary(c greetpb.GreetServiceClient) {
@@ -62,4 +65,59 @@ func doServerStreaming(c greetpb.GreetServiceClient) {
 		}
 		log.Printf("Response from GreetMany: %v", msg.GetResult())
 	}
+}
+
+func doClintStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a client streaming RPC...")
+
+	stream, err := c.LongGreet(context.Background())
+	if err != nil {
+		log.Fatalf("error while calling LongGreet: %v\n", err)
+	}
+
+	requests := []*greetpb.LongGreetRequest{
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "shawon",
+				LastName:  "fb",
+			},
+		},
+
+		//&greetpb.LongGreetRequest{
+		//	Greeting: &greetpb.Greeting{
+		//		FirstName: "2",
+		//		LastName:  "fb",
+		//	},
+		//},
+		//&greetpb.LongGreetRequest{
+		//	Greeting: &greetpb.Greeting{
+		//		FirstName: "3",
+		//		LastName:  "fb",
+		//	},
+		//},
+	}
+
+	for i := 0; i < 100; i++ {
+		requests = append(requests, &greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: strconv.Itoa(i),
+				LastName:  "fb",
+			},
+		})
+	}
+
+	/// iterate the slice and send individual requests
+	for _, req := range requests {
+		fmt.Printf("Sending req:%v\n", req)
+		stream.Send(req)
+		time.Sleep(1000 * time.Millisecond)
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("LongGreetResponse : %v\n", res)
+
 }
