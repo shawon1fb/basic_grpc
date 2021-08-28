@@ -52,7 +52,7 @@ func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
-			//finish loop
+			// finish loop
 			return stream.SendAndClose(&greetpb.LongGreetResponse{
 				Result: result,
 			})
@@ -64,7 +64,34 @@ func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 		result += "Hello " + firstName + "! "
 
 	}
-	//return nil
+	// return nil
+}
+
+func (*server) GreetEveryOne(stream greetpb.GreetService_GreetEveryOneServer) error {
+	fmt.Printf("GreetEveryOne function was invked with stream\n")
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatal("Error while sending data t client", err)
+			return err
+		}
+
+		firstName := req.GetGreeting().GetFirstName()
+		lastName := req.GetGreeting().GetLastName()
+		result := "hello " + firstName + " " + lastName + "! "
+
+		sendErr := stream.Send(&greetpb.GreetEveryOneResponse{
+			Result: result,
+		})
+		if sendErr != nil {
+			log.Fatal("Error while sending data t client", sendErr)
+			return sendErr
+		}
+
+	}
 }
 
 func main() {
@@ -97,4 +124,4 @@ func main() {
 	}
 }
 
-//tow number NewServerTLSFromFile
+// tow number NewServerTLSFromFile
