@@ -23,7 +23,7 @@ func main() {
 
 	// doUnary(c)
 	// doServerStreaming(c)
-	//doClintStreaming(c)
+	// doClintStreaming(c)
 	doBiDiStreaming(c)
 }
 
@@ -138,7 +138,7 @@ func doBiDiStreaming(c greetpb.GreetServiceClient) {
 	}
 	watch := make(chan struct{})
 
-	//we send a bunch of requests to the client (go routine)
+	// we send a bunch of requests to the client (go routine)
 
 	go func() {
 		for _, req := range requests {
@@ -163,7 +163,5 @@ func doBiDiStreaming(c greetpb.GreetServiceClient) {
 		}
 		close(watch)
 	}()
-
 	<-watch
-
 }
